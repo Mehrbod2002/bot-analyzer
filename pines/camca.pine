@@ -1,0 +1,155 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © takinanooshdesign
+
+//@version=4
+study("Mahanfx", overlay=true, max_labels_count=500)
+
+Periods2 = input(title="ATR Period 2", type=input.integer, defval=2, group="ST2")
+src2 =  input("hl2", title="Source 2", group="ST2", options=["open", "high", "low", "close", "hl2", "hlc3", "ohlc4"])
+Multiplier2 = input(title="ATR Multiplier 2", type=input.float, step=0.1, defval=1.0, group="ST2")
+changeATR2= input(title="Change ATR Calculation Method ?", type=input.bool, defval=true, group="ST2")
+
+Periods3 = input(title="ATR Period 3", type=input.integer, defval=3, group="ST3")
+src3 =  input("hlc3", title="Source 31", group="ST3", options=["open", "high", "low", "close", "hl2", "hlc3", "ohlc4"])
+Multiplier3 = input(title="ATR Multiplier 3", type=input.float, step=0.1, defval=1.0, group="ST3")
+changeATR3= input(title="Change ATR Calculation Method ?", type=input.bool, defval=true, group="ST3")
+
+
+length = input(title="ATR Period", type=input.integer, defval=1, group="Chandelier")
+mult = input(title="ATR Multiplier", type=input.float, step=0.1, defval=1.8, group="Chandelier")
+
+
+
+O = open
+H = high
+L = low
+C = close
+HL2 = hl2
+HLC3 = hlc3
+OHLC4 = ohlc4
+TR = tr
+ATR2 = atr(Periods2)
+ATR3 = atr(Periods3)
+ATRCh = atr(length)
+HighestCh =  highest(length)
+LowestCh =  lowest(length)
+
+
+buyLabelColor = input(color.green, "Buy Labels Color")
+sellLabelColor = input(color.red, "Sell Labels Color")
+
+B2 = input("1", "Buy SuperTrend 2 (Alert & Label)", group="Options")
+B3 = input("2", "Buy SuperTrend 3 (Alert & Label)", group="Options")
+CHB = input("3", "Buy Cahandelier (Alert & Label)", group="Options")
+
+S2 = input("1", "Sell SuperTrend 2 (Alert & Label)", group="Options")
+S3 = input("2", "Sell SuperTrend 3 (Alert & Label)", group="Options")
+CHS = input("3", "Sell Cahandelier (Alert & Label)", group="Options")
+
+displayST2Labels = input(true, "Display Super-Trend 2 Signals?", group="Display")
+displayST3Labels = input(true, "Display Super-Trend 3 Signals?", group="Display")
+displayChandelierLabels = input(true, "Display Chandelier-Exit Signals?", group="Display")
+
+
+getSource(src, O, L, H, C, HL2, HLC3, OHLC4) =>
+    realSrc = O
+    if src == "low"
+        realSrc := L
+    else if src == "high"
+        realSrc := H
+    else if src == "close"
+        realSrc := C
+    else if src == "hl2"
+        realSrc := HL2
+    else if src == "hlc3"
+        realSrc := HLC3
+    else if src == "ohlc4"
+        realSrc := OHLC4
+    realSrc
+    
+
+// SuperTrend2 -----------------------------------------------------------------------------------------------------
+atr22 = sma(TR, Periods2)
+atr2= changeATR2 ? ATR2 : atr22
+up2=getSource(src3, O, L, H, C, HL2, HLC3, OHLC4)-(Multiplier2*atr2)
+up21 = nz(up2[1],up2)
+up2 := C[1] > up21 ? max(up2,up21) : up2
+dn2=getSource(src2, O, L, H, C, HL2, HLC3, OHLC4)+(Multiplier2*atr2)
+dn21 = nz(dn2[1], dn2)
+dn2 := C[1] < dn21 ? min(dn2, dn21) : dn2
+trend2 = 1
+trend2 := nz(trend2[1], trend2)
+trend2 := trend2 == -1 and C > dn21 ? 1 : trend2 == 1 and C < up2 ? -1 : trend2
+
+buySignal2 = trend2 == 1 and trend2[1] == -1
+sellSignal2 = trend2 == -1 and trend2[1] == 1
+
+// SuperTrend3 -----------------------------------------------------------------------------------------------------
+atr32 = sma(TR, Periods3)
+atr3= changeATR3 ? ATR3 : atr32
+up3=getSource(src3, O, L, H, C, HL2, HLC3, OHLC4)-(Multiplier3*atr3)
+up31 = nz(up3[1],up3)
+up3 := C[1] > up31 ? max(up3,up31) : up3
+dn3=getSource(src3, O, L, H, C, HL2, HLC3, OHLC4)+(Multiplier3*atr3)
+dn31 = nz(dn3[1], dn3)
+dn3 := C[1] < dn31 ? min(dn3, dn31) : dn3
+trend3 = 1
+trend3 := nz(trend3[1], trend3)
+trend3 := trend3 == -1 and C > dn31 ? 1 : trend3 == 1 and C < up3 ? -1 : trend3
+
+buySignal3 = trend3 == 1 and trend3[1] == -1
+sellSignal3 = trend3 == -1 and trend3[1] == 1
+
+// Chandelier -----------------------------------------------------------------------------------------------------
+useClose = false
+atr = mult * ATRCh
+longStop = HighestCh - atr
+longStopPrev = nz(longStop[1], longStop) 
+longStop := C[1] > longStopPrev ? max(longStop, longStopPrev) : longStop
+
+shortStop = LowestCh + atr
+shortStopPrev = nz(shortStop[1], shortStop)
+shortStop := C[1] < shortStopPrev ? min(shortStop, shortStopPrev) : shortStop
+
+var int dir = 1
+dir := C > shortStopPrev ? 1 : C < longStopPrev ? -1 : dir
+
+buySignal = dir == 1 and dir[1] == -1
+sellSignal = dir == -1 and dir[1] == 1
+
+// Signals ==============================
+
+buyText = "\n"
+sellText = "\n"
+
+
+if buySignal2 and displayST2Labels
+    buyText := buyText + B2 + "\n" 
+
+if buySignal and displayChandelierLabels
+    buyText := buyText  + CHB + "\n"
+
+if buySignal3 and displayST3Labels
+    buyText := buyText + B3 + "\n" 
+
+
+
+if sellSignal2 and displayST2Labels
+    sellText := sellText + S2 + "\n"
+
+if sellSignal and displayChandelierLabels
+    sellText := sellText  + CHS + "\n"
+
+if sellSignal3 and displayST3Labels
+    sellText := sellText + S3 + "\n"
+    
+buySignals = ((buySignal3 and displayST3Labels) or (buySignal and displayChandelierLabels) or (buySignal2 and displayST2Labels))
+sellSignals = ((sellSignal3 and displayST3Labels) or (sellSignal and displayChandelierLabels) or (sellSignal2 and displayST2Labels))
+
+if buySignals
+    label.new(bar_index, L, buyText, color=buyLabelColor, textcolor=color.white, style=label.style_label_up, size=size.small)
+    alert(buyText, alert.freq_once_per_bar_close)
+
+if sellSignals
+    label.new(bar_index, H, sellText, color=sellLabelColor, textcolor=color.white, style=label.style_label_down, size=size.small)
+    alert(sellText, alert.freq_once_per_bar_close)
