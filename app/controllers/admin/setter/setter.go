@@ -178,6 +178,7 @@ func SetUnFreezeUser(c *gin.Context) {
 func TradeData(c *gin.Context) {
 	var jsonData interface{}
 	if err := c.ShouldBindJSON(&jsonData); err != nil {
+		fmt.Println(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
