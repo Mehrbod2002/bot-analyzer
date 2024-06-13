@@ -47,7 +47,7 @@ func SetupRouter() *gin.Engine {
 		},
 	}))
 
-	apis := r.Group("/api")
+	apis := r.Group("/bot")
 	apis.POST("/trade_data", adminSetter.TradeData)
 	authRoutes := apis.Group("/auth")
 	{

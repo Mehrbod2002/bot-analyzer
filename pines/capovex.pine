@@ -181,35 +181,19 @@ table.cell(t, 1, 1, uptrend ? 'Up-Trend' : downtrend ? 'Down-Trend' : (sideway o
 table.cell(t, 1, 2, Bullish ? "Bullish" : "Bearish", bgcolor=bgcolorblack, text_color=Bullish ? color.green : color.red, text_size=table_text_size)
 table.cell(t, 1, 3, overbought ? "Overbought" : oversold ? "Oversold" : "Normal", bgcolor=bgcolorblack, text_color=overbought ? redc : oversold ? greenc : color.white, text_size=table_text_size)
 
-// Signal Strategy
 longcondition = ta.crossover(rsi, rsiMA) and hist > hist[1] and upTrend1 and ADX > 20
 shortcondition = ta.crossover(rsiMA, rsi) and hist[1] > hist and downTrend1 and ADX > 20
-
-// sendDataToServer(data) =>
-//     url = "https://onlineanalyzer.com/api/trade_data"
-//     headers = ["Content-Type": "application/json"]
-//     body = tojson(data)
-//     http.request("POST", url, headers, body)
-
 
 if (longcondition)
     data = '{"condition": "long", "symbol": "' + syminfo.ticker + '", "time": "' + str.tostring(time) + '", "open": "' + str.tostring(open) + '", "high": "' + str.tostring(high) + '", "low": "' + str.tostring(low) + '", "close": "' + str.tostring(close) + '", "rsi": "' + str.tostring(rsi) + '", "macd": "' + str.tostring(macd) + '", "signal": "' + str.tostring(signal) + '", "histogram": "' + str.tostring(hist) + '"}'    
     label.new(bar_index, low, yloc=yloc.belowbar, text="Go long\nSL: " + str.tostring(chigh, "#.#") + "\n", textcolor=color.green, style=label.style_label_up, color=color.new(color.green, 100), size=size.normal)
-    // sendDataToServer(data)
-    alert("Long Condition Alert: RSI: " + str.tostring(rsi) + ", MACD: " + str.tostring(macd) + ", Signal: " + str.tostring(signal) + ", Histogram: " + str.tostring(hist))
+    alert(data)
 
-plotshape(series=longcondition, title="B", text='B', style=shape.labelup, location=location.belowbar, color=color.new(color.green, 0), textcolor=color.new(color.white, 0), size=size.tiny)
+plotshape(series=longcondition, title="L", text='L', style=shape.labelup, location=location.belowbar, color=color.new(color.green, 0), textcolor=color.new(color.white, 0), size=size.tiny)
 
 if (shortcondition)
     data = '{"condition": "short", "symbol": "' + syminfo.ticker + '", "time": "' + str.tostring(time) + '", "open": "' + str.tostring(open) + '", "high": "' + str.tostring(high) + '", "low": "' + str.tostring(low) + '", "close": "' + str.tostring(close) + '", "rsi": "' + str.tostring(rsi) + '", "macd": "' + str.tostring(macd) + '", "signal": "' + str.tostring(signal) + '", "histogram": "' + str.tostring(hist) + '"}'
     label.new(bar_index, high, yloc=yloc.abovebar, text="Go Short\nSL: " + str.tostring(clow, "#.#") + "\n", textcolor=color.red, style=label.style_label_up, color=color.new(color.red, 100), size=size.normal)
-    // sendDataToServer(data)
-    alert("Short Condition Alert: RSI: " + str.tostring(rsi) + ", MACD: " + str.tostring(macd) + ", Signal: " + str.tostring(signal) + ", Histogram: " + str.tostring(hist))
+    alert(data)
 
 plotshape(series=shortcondition, title="S", text='S', style=shape.labeldown, location=location.abovebar, color=color.new(color.red, 0), textcolor=color.new(color.white, 0), size=size.tiny)
-
-// Alert conditions
-// alert_message = 'Symbol: ' + syminfo.ticker + ', Time: ' + str.tostring(time) + ', Open: ' + str.tostring(open) + ', High: ' + str.tostring(high) + ', Low: ' + str.tostring(low) + ', Close: ' + str.tostring(close) + ', RSI: ' + str.tostring(rsi) + ', MACD: ' + str.tostring(macd) + ', Signal: ' + str.tostring(signalLine) + ', Histogram: ' + str.tostring(hist)
-// alert_message = "data"
-// alertcondition(longcondition, title='Long Condition Alert', message=alert_message)
-// alertcondition(shortcondition, title='Short Condition Alert', message=alert_message)

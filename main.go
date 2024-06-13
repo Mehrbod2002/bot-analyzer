@@ -61,7 +61,7 @@ func main() {
 	// }
 
 	routes := routes.SetupRouter()
-	runningErr := routes.Run(":3000")
+	runningErr := routes.Run(":6000")
 	log.Println("start serving ...")
 	if runningErr != nil {
 		log.Println(runningErr)

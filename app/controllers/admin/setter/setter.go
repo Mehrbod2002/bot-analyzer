@@ -4,7 +4,9 @@ import (
 	"bot/models"
 	"bot/utils"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 
@@ -176,13 +178,18 @@ func SetUnFreezeUser(c *gin.Context) {
 }
 
 func TradeData(c *gin.Context) {
-	var jsonData interface{}
-	if err := c.ShouldBindJSON(&jsonData); err != nil {
-		fmt.Println(err)
+	body, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read request body"})
+		return
+	}
+
+	var data models.Trade
+	if err := json.Unmarshal(body, &data); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	fmt.Println(jsonData)
-	c.JSON(200, gin.H{})
+	fmt.Println("Received data:", data)
+	c.JSON(http.StatusOK, gin.H{"message": "Successfully received data"})
 }
