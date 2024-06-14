@@ -3,9 +3,11 @@ package models
 import (
 	"bot/utils"
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -240,3 +242,110 @@ func (user *User) GenerateToken() (string, error) {
 
 	return signedToken, nil
 }
+
+func (p ProvidedData) String() string {
+	var sb strings.Builder
+
+	sb.WriteString(fmt.Sprintf("High: %.2f\n", p.High))
+	sb.WriteString(fmt.Sprintf("Low: %.2f\n", p.Low))
+	sb.WriteString(fmt.Sprintf("Close: %.2f\n", p.Close))
+	sb.WriteString(fmt.Sprintf("Open: %.2f\n", p.Open))
+	sb.WriteString(fmt.Sprintf("Trade Price: %.2f\n", p.TradePrice))
+	sb.WriteString(fmt.Sprintf("Stop Limit: %.2f\n", p.StopLimit))
+	sb.WriteString(fmt.Sprintf("TP: %.2f\n", p.Tp))
+	sb.WriteString(fmt.Sprintf("Magic Number: %.2f\n", p.MagicNumber))
+	sb.WriteString(fmt.Sprintf("Next Trade Price: %.2f\n", p.NextTradePrice))
+	sb.WriteString(fmt.Sprintf("Next Trade Type: %s\n", p.NextTradeType))
+	sb.WriteString(fmt.Sprintf("Trade Type: %s\n", p.TradeType))
+
+	return sb.String()
+}
+
+func ComputeTradeData(c *gin.Context,
+	generalData GeneralData,
+	data Trade, firstCondition bool) (bool, *ProvidedData) {
+	db, DBerr := utils.GetDB(c)
+	if DBerr != nil {
+		log.Println(DBerr)
+		return false, nil
+	}
+
+	var runningTrades []Running
+	cursor, err := db.Collection("running_trades").Find(context.Background(), bson.M{})
+	if err != nil {
+		utils.InternalError(c)
+		return false, nil
+	}
+	err = cursor.All(context.Background(), &runningTrades)
+	if err != nil {
+		utils.InternalError(c)
+		return false, nil
+	}
+
+	hasActive := false
+	lastTrade := Running{}
+	Rounds := 0
+	for _, runningTrade := range runningTrades {
+		if runningTrade.Active {
+			hasActive = true
+			lastTrade = runningTrade
+			Rounds = lastTrade.Round
+		}
+	}
+
+	if !generalData.SyncSymbols && hasActive {
+		return false, nil
+	}
+
+	high, _ := strconv.ParseFloat(data.High, 64)
+	low, _ := strconv.ParseFloat(data.Low, 64)
+	close, _ := strconv.ParseFloat(data.Close, 64)
+	open, _ := strconv.ParseFloat(data.Open, 64)
+	TradePrice := 0.0
+	StopLimit := 0.0
+	Tp := 0.0
+	MagicNumber := generalData.MagicNumber
+	NextTypeTrade := "Buy Stop"
+	NextTradePrice := 0.0
+	TradeType := data.Condition
+	if TradeType == "long" {
+		StopLimit = ((generalData.StopLimit / 100) * high) + high
+		Tp = high + (open + high)
+		NextTypeTrade = "Sell Stop"
+		NextTradePrice = StopLimit
+	} else if TradeType == "short" {
+		StopLimit = low - ((generalData.StopLimit / 100) * low)
+		Tp = low - (close - low)
+		NextTradePrice = StopLimit
+	}
+
+	if Rounds == 0 {
+		if generalData.FirstTradeModeIsAmount {
+			TradePrice = float64(generalData.FirstTrade)
+		} else {
+			// Get Balance : now assume 100$ Balance total
+			TradePrice = (generalData.FirstTrade / 100) * 100
+		}
+	}
+
+	ProvidedData := ProvidedData{
+		High:           high,
+		Close:          close,
+		Open:           open,
+		Low:            low,
+		Tp:             Tp,
+		NextTradePrice: NextTradePrice,
+		NextTradeType:  NextTypeTrade,
+		TradeType:      TradeType,
+		MagicNumber:    MagicNumber,
+		TradePrice:     TradePrice,
+		StopLimit:      StopLimit,
+	}
+	return true, &ProvidedData
+}
+
+// Rounds                         int                `bson:"rounds" json:"rounds"`
+// CompensateRounds               int                `bson:"compensate_rounds" json:"compensate_rounds"`
+// MakePositionWhenNotRoundClosed bool               `bson:"make_position_when_not_round_closed" json:"make_position_when_not_round_closed"`
+// MaxTradesVolumn                float64            `bson:"max_trade_volumn" json:"max_trade_volumn"`
+// MaxLossToCloseAll              float64            `bson:"max_loss_to_close_all" json:"max_loss_to_close_all"`

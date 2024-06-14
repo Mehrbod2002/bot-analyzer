@@ -74,10 +74,10 @@ const AllGeneralData: FC<UsersTableProps> = ({ GeneralData }) => {
             <TableRow>
               <TableCell>First Type Number Count</TableCell>
               <TableCell>First Type Has Flag</TableCell>
-              <TableCell>First Type Both</TableCell>
+              <TableCell>First Type Min Volume</TableCell>
               <TableCell>Second Type Number Count</TableCell>
               <TableCell>Second Type Has Flag</TableCell>
-              <TableCell>Second Type Both</TableCell>
+              <TableCell>Second Type Volume</TableCell>
               <TableCell>Just Send Signal</TableCell>
               <TableCell>Sync Symbols</TableCell>
               <TableCell>First Trade</TableCell>
@@ -127,8 +127,8 @@ const AllGeneralData: FC<UsersTableProps> = ({ GeneralData }) => {
                       color="text.primary"
                       gutterBottom
                       noWrap
-                    >
-                      {user.first_type.both ? "True" : "False"}
+                    >both
+                      {user.first_type.min_volumn}
                     </Typography>
                   </TableCell>
                   <TableCell>
@@ -161,7 +161,7 @@ const AllGeneralData: FC<UsersTableProps> = ({ GeneralData }) => {
                       gutterBottom
                       noWrap
                     >
-                      {user.second_type.both ? "True" : "False"}
+                      {user.second_type.min_volumn}
                     </Typography>
                   </TableCell>
                   <TableCell>

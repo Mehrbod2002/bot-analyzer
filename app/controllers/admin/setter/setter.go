@@ -5,10 +5,11 @@ import (
 	"bot/utils"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -98,6 +99,13 @@ func SetSetting(c *gin.Context) {
 }
 
 func TradeData(c *gin.Context) {
+	db, err := utils.GetDB(c)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database connection error"})
+		return
+	}
+
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read request body"})
@@ -110,6 +118,48 @@ func TradeData(c *gin.Context) {
 		return
 	}
 
-	fmt.Println("Received data:", data)
+	var generalData models.GeneralData
+	if err := db.Collection("general_data").FindOne(context.Background(),
+		bson.M{},
+		options.FindOne().SetSort(bson.D{{Key: "_id", Value: -1}})).Decode(&generalData); err != nil {
+		utils.InternalError(c)
+		return
+	}
+
+	inRange, _ := utils.IsValidTime(generalData.FromTime, generalData.ToTime)
+	if !inRange {
+		utils.InternalError(c)
+		return
+	}
+
+	var countFlags = len(strings.Split(data.Signaler, "|"))
+	var matchedCondition = false
+	volume, err := strconv.ParseFloat(data.Volume, 64)
+	if !generalData.JustSendSignal &&
+		(generalData.FirstType.HasFlag && data.Flag &&
+			generalData.FirstType.NumberCount != 0 &&
+			countFlags == generalData.FirstType.NumberCount &&
+			generalData.FirstType.MinVolumn != 0 &&
+			generalData.FirstType.MinVolumn <= volume) {
+		matchedCondition = true
+		// valid, data := models.ComputeTradeData(c, generalData, data, true)
+		// if valid {
+		// 	logger.()
+		// }
+	}
+
+	if !matchedCondition &&
+		!generalData.JustSendSignal &&
+		generalData.FirstType.HasFlag && data.Flag &&
+		generalData.FirstType.NumberCount != 0 &&
+		countFlags == generalData.FirstType.NumberCount &&
+		generalData.SecondType.MinVolumn != 0 &&
+		generalData.SecondType.MinVolumn <= volume {
+		matchedCondition = true
+		// valid, data := models.ComputeTradeData(c, generalData, data, false)
+		// if valid {
+		// }
+	}
+
 	c.JSON(http.StatusOK, gin.H{"message": "Successfully received data"})
 }

@@ -46,7 +46,7 @@ export const AllSymbols = [
 export interface Condition {
   number_count: number;
   has_flag: boolean;
-  both: boolean;
+  min_volumn: number;
 }
 
 export interface GeneralData {

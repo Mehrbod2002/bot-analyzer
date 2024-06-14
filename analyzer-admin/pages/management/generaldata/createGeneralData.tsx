@@ -28,12 +28,12 @@ function CreateGeneralData() {
         first_type: {
             number_count: 0,
             has_flag: false,
-            both: false,
+            min_volumn: 0,
         },
         second_type: {
             number_count: 0,
             has_flag: false,
-            both: false,
+            min_volumn: 0,
         },
         just_send_signal: false,
         sync_symbols: false,
@@ -150,16 +150,41 @@ function CreateGeneralData() {
                                             />
                                         }>
                                     </FormControlLabel>
+                                    <TextField
+                                        label="Min Volumn"
+                                        id="first-type-min-volumn"
+                                        name="first_type.min_volumn"
+                                        value={formData.first_type.min_volumn}
+                                        onChange={handleChange}
+                                    />
+                                    <Divider sx={{ my: 3 }} />
+                                    <TextField
+                                        required
+                                        id="second-type-number-count"
+                                        name="second_type.number_count"
+                                        label="Second Type Number Count"
+                                        type="number"
+                                        value={formData.second_type.number_count}
+                                        onChange={handleChange}
+                                    />
                                     <FormControlLabel
-                                        label="Both"
+                                        label="Has Flag"
                                         control={
                                             <Checkbox
-                                                id="first-type-both"
-                                                name="first_type.both"
-                                                checked={formData.first_type.both}
+                                                id="second-type-has-flag"
+                                                name="second_type.has_flag"
+                                                checked={formData.second_type.has_flag}
                                                 onChange={handleChange}
-                                            />}>
+                                            />
+                                        }>
                                     </FormControlLabel>
+                                    <TextField
+                                        label="Min Volumn"
+                                        id="second-type-min-volumn"
+                                        name="second_type.min_volumn"
+                                        value={formData.second_type.min_volumn}
+                                        onChange={handleChange}
+                                    />
                                     <Divider sx={{ my: 3 }} />
                                     <FormControlLabel
                                         label="Just Send a signal"

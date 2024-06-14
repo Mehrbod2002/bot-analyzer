@@ -1,10 +1,12 @@
 package utils
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -156,4 +158,32 @@ func AdminAuthMiddleware() gin.HandlerFunc {
 
 		c.Abort()
 	}
+}
+
+func IsValidTime(start, end string) (bool, error) {
+	const timeLayout = "15:04"
+
+	_, err := time.Parse(timeLayout, start)
+	if err != nil {
+		return false, fmt.Errorf("invalid start time format: %v", err)
+	}
+
+	_, err = time.Parse(timeLayout, end)
+	if err != nil {
+		return false, fmt.Errorf("invalid end time format: %v", err)
+	}
+
+	now := time.Now().UTC()
+
+	nowDate := now.Format("2006-01-02")
+	startTimeToday, err := time.Parse(time.RFC3339, fmt.Sprintf("%sT%s:00Z", nowDate, start))
+	if err != nil {
+		return false, fmt.Errorf("could not create start time: %v", err)
+	}
+	endTimeToday, err := time.Parse(time.RFC3339, fmt.Sprintf("%sT%s:00Z", nowDate, end))
+	if err != nil {
+		return false, fmt.Errorf("could not create end time: %v", err)
+	}
+
+	return now.After(startTimeToday) && now.Before(endTimeToday), nil
 }

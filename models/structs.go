@@ -7,8 +7,24 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+type ProvidedData struct {
+	High           float64
+	Low            float64
+	Close          float64
+	Open           float64
+	TradePrice     float64
+	StopLimit      float64
+	Tp             float64
+	MagicNumber    float64
+	NextTradePrice float64
+	NextTradeType  string
+	TradeType      string
+}
+
 type Trade struct {
+	Flag      bool   `json:"flag"`
 	Signaler  string `json:"signaler"`
+	Volume    string `json:"volume"`
 	Condition string `json:"condition"`
 	Symbol    string `json:"symbol"`
 	Time      string `json:"time"`
@@ -34,10 +50,18 @@ type User struct {
 	IsSupportOrAdmin bool               `bson:"support_or_admin" json:"support_or_admin"`
 }
 
+type Running struct {
+	Active     bool    `bson:"active" json:"active"`
+	SymbolName string  `bson:"symbol_name" json:"symbol_name"`
+	TradeData  Trade   `bson:"trade_data" json:"trade_data"`
+	Round      int     `bson:"round" json:"round"`
+	History    []Trade `bson:"history" json:"history"`
+}
+
 type Condition struct {
-	NumberCount int  `bson:"number_count" json:"number_count"`
-	HasFlag     bool `bson:"has_flag" json:"has_flag"`
-	Both        bool `bson:"both" json:"both"`
+	NumberCount int     `bson:"number_count" json:"number_count"`
+	HasFlag     bool    `bson:"has_flag" json:"has_flag"`
+	MinVolumn   float64 `bson:"min_volumn" json:"min_volumn"`
 }
 
 type GeneralData struct {
