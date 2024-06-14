@@ -110,10 +110,6 @@ func ValidateAdmin(token string) bool {
 	return false
 }
 
-func TrimAndLowerCase(data string) string {
-	return strings.ToLower(strings.TrimSpace(data))
-}
-
 func AdminAuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		session := sessions.Default(c)

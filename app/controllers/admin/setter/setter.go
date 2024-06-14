@@ -12,169 +12,89 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func SetUserPermissions(c *gin.Context) {
-	if !models.AllowedAction(c, models.ActionWrite) {
-		return
-	}
-	var permissions struct {
-		UserID     string            `bson:"user_id"`
-		Permission models.Permission `bson:"permissions" json:"permissions"`
-	}
-	userID, err := primitive.ObjectIDFromHex(permissions.UserID)
-	if err != nil {
-		log.Println(err)
-		utils.BadBinding(c)
-		return
-	}
-	db, DBerr := utils.GetDB(c)
-	if DBerr != nil {
-		log.Println(DBerr)
-		return
-	}
-	_, err = db.Collection("users").UpdateOne(context.Background(), bson.M{
-		"_id": userID,
-	}, bson.M{"$addToSet": permissions}, options.Update().SetUpsert(true))
-	if err != nil {
-		log.Println(err)
-		utils.InternalError(c)
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"success": true, "message": ""})
-}
-
-func SetDeleteUser(c *gin.Context) {
-	if !models.AllowedAction(c, models.ActionWrite) {
-		return
-	}
-	var request struct {
-		ID string `json:"user_id"`
-	}
-	if err := c.ShouldBindJSON(&request); err != nil {
-		log.Println(err)
-		utils.BadBinding(c)
-		return
-	}
-	userID, err := primitive.ObjectIDFromHex(request.ID)
-	if err != nil {
-		log.Println(err)
-		utils.BadBinding(c)
-		return
-	}
-	var user models.User
+func SetSetting(c *gin.Context) {
 	db, err := utils.GetDB(c)
 	if err != nil {
 		log.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database connection error"})
 		return
 	}
-	if err := db.Collection("users").FindOne(context.Background(), bson.M{
-		"_id": userID,
-	}).Decode(&user); err != nil {
-		log.Println(err)
-		utils.InternalError(c)
-		return
-	}
-	if _, err := db.Collection("users").DeleteOne(context.Background(), bson.M{
-		"_id": user.ID,
-	}); err != nil {
-		log.Println(err)
-		utils.InternalError(c)
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"success": true, "message": "done"})
-}
 
-func SetFreezeUser(c *gin.Context) {
-	if !models.AllowedAction(c, models.ActionWrite) {
-		return
-	}
-	var request struct {
-		ID string `json:"user_id"`
-	}
-	if err := c.ShouldBindJSON(&request); err != nil {
+	var generalData models.GeneralData
+	if err := c.ShouldBindJSON(&generalData); err != nil {
 		log.Println(err)
-		utils.BadBinding(c)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		return
 	}
-	var user models.User
-	db, err := utils.GetDB(c)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	userID, err := primitive.ObjectIDFromHex(request.ID)
-	if err != nil {
-		log.Println(err)
-		utils.BadBinding(c)
-		return
-	}
-	if err := db.Collection("users").FindOne(context.Background(), bson.M{
-		"_id": userID,
-	}).Decode(&user); err != nil {
-		log.Println(err)
-		utils.InternalError(c)
-		return
-	}
-	if user.Freeze {
-		c.JSON(http.StatusOK, gin.H{"success": true, "message": "freezed before"})
-		return
-	}
-	if _, err := db.Collection("users").UpdateOne(context.Background(), bson.M{"$set": bson.M{"_id": user.ID}}, bson.M{
-		"freeze": true,
-	}); err != nil {
-		log.Println(err)
-		utils.InternalError(c)
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"success": true, "message": "done"})
-}
 
-func SetUnFreezeUser(c *gin.Context) {
-	if !models.AllowedAction(c, models.ActionWrite) {
+	update := bson.M{"$set": bson.M{}}
+
+	if generalData.FirstType != (models.Condition{}) {
+		update["$set"].(bson.M)["first_type"] = generalData.FirstType
+	}
+	if generalData.SecondType != (models.Condition{}) {
+		update["$set"].(bson.M)["second_type"] = generalData.SecondType
+	}
+	if generalData.JustSendSignal {
+		update["$set"].(bson.M)["just_send_signal"] = generalData.JustSendSignal
+	}
+	if generalData.SyncSymbols {
+		update["$set"].(bson.M)["sync_symbols"] = generalData.SyncSymbols
+	}
+	if generalData.FirstTrade != 0 {
+		update["$set"].(bson.M)["first_trade"] = generalData.FirstTrade
+	}
+	if generalData.FirstTradeModeIsAmount {
+		update["$set"].(bson.M)["first_trade_mode_is_amount"] = generalData.FirstTradeModeIsAmount
+	}
+	if generalData.StopLimit != 0 {
+		update["$set"].(bson.M)["stop_limit"] = generalData.StopLimit
+	}
+	if generalData.Rounds != 0 {
+		update["$set"].(bson.M)["rounds"] = generalData.Rounds
+	}
+	if generalData.MagicNumber != 0 {
+		update["$set"].(bson.M)["magic_number"] = generalData.MagicNumber
+	}
+	if generalData.FromTime != "" {
+		update["$set"].(bson.M)["from_time"] = generalData.FromTime
+	}
+	if generalData.ToTime != "" {
+		update["$set"].(bson.M)["to_time"] = generalData.ToTime
+	}
+	if generalData.CompensateRounds != 0 {
+		update["$set"].(bson.M)["compensate_rounds"] = generalData.CompensateRounds
+	}
+	if generalData.MakePositionWhenNotRoundClosed {
+		update["$set"].(bson.M)["make_position_when_not_round_closed"] = generalData.MakePositionWhenNotRoundClosed
+	}
+	if generalData.MaxTradesVolumn != 0 {
+		update["$set"].(bson.M)["max_trade_volumn"] = generalData.MaxTradesVolumn
+	}
+	if generalData.MaxLossToCloseAll != 0 {
+		update["$set"].(bson.M)["max_loss_to_close_all"] = generalData.MaxLossToCloseAll
+	}
+
+	if len(update["$set"].(bson.M)) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "No valid fields to update"})
 		return
 	}
-	var request struct {
-		ID string `json:"user_id"`
-	}
-	if err := c.ShouldBindJSON(&request); err != nil {
+
+	if _, err := db.Collection("general_data").UpdateOne(context.Background(),
+		bson.M{},
+		bson.M{
+			"$set": generalData,
+		},
+		options.Update().SetUpsert(true)); err != nil {
 		log.Println(err)
-		utils.BadBinding(c)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update general data"})
 		return
 	}
-	userID, err := primitive.ObjectIDFromHex(request.ID)
-	if err != nil {
-		log.Println(err)
-		utils.BadBinding(c)
-		return
-	}
-	var user models.User
-	db, err := utils.GetDB(c)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	if err := db.Collection("users").FindOne(context.Background(), bson.M{
-		"_id": userID,
-	}).Decode(&user); err != nil {
-		log.Println(err)
-		utils.InternalError(c)
-		return
-	}
-	if !user.Freeze {
-		c.JSON(http.StatusOK, gin.H{"success": true, "message": "unfreezed before"})
-		return
-	}
-	if _, err := db.Collection("users").UpdateOne(context.Background(), bson.M{"$set": bson.M{"_id": user.ID}}, bson.M{
-		"freeze": false,
-	}); err != nil {
-		log.Println(err)
-		utils.InternalError(c)
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"success": true, "message": "done"})
+
+	c.JSON(http.StatusOK, gin.H{"message": "General data updated successfully"})
 }
 
 func TradeData(c *gin.Context) {

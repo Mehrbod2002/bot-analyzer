@@ -4,7 +4,6 @@ import (
 	"bot/utils"
 	"context"
 	"log"
-	"net/http"
 	"os"
 	"regexp"
 	"strings"
@@ -210,9 +209,9 @@ func ReceiveSession(c *gin.Context) *User {
 				return nil
 			}
 			user := &User{
-				ID:          userID,
-				PhoneNumber: email,
-				CreatedAt:   createdAt,
+				ID:        userID,
+				Email:     email,
+				CreatedAt: createdAt,
 			}
 
 			return user
@@ -222,46 +221,11 @@ func ReceiveSession(c *gin.Context) *User {
 	return nil
 }
 
-func AllowedAction(c *gin.Context, action Action) bool {
-	user, isAdmin := ValidateSession(c)
-	if isAdmin {
-		return true
-	}
-	db, DBerr := utils.GetDB(c)
-	if DBerr != nil {
-		log.Println(DBerr)
-		return false
-	}
-	var currentUser User
-	tableName := "users"
-	err := db.Collection(tableName).
-		FindOne(context.Background(), bson.M{
-			"_id": user.ID,
-		}).Decode(&currentUser)
-	if err != nil {
-		log.Println(err)
-		utils.InternalError(c)
-		return false
-	}
-	for _, act := range currentUser.Permissions.Actions {
-		if act == action {
-			return true
-		}
-	}
-	c.JSON(http.StatusMethodNotAllowed, gin.H{
-		"success": false,
-		"message": "you don't have this permission",
-		"data":    "invalid_permission",
-	})
-	return false
-}
-
 func (user *User) GenerateToken() (string, error) {
 	claims := &Claims{
-		ID:          user.ID.Hex(),
-		Email:       user.Email,
-		CreatedAt:   user.CreatedAt,
-		PhoneNumber: user.PhoneNumber,
+		ID:        user.ID.Hex(),
+		Email:     user.Email,
+		CreatedAt: user.CreatedAt,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Hour * 24 * 30).Unix(),
 		},
@@ -275,54 +239,4 @@ func (user *User) GenerateToken() (string, error) {
 	}
 
 	return signedToken, nil
-}
-
-func ActionChecker(actions []Action) bool {
-	for _, reqAct := range actions {
-		found := false
-		for _, act := range AllActions {
-			if reqAct == act {
-				found = true
-				break
-			}
-		}
-
-		if !found {
-			return false
-		}
-	}
-
-	return true
-}
-
-func (loginData *LoginDataStep1) Validate(c *gin.Context) bool {
-	if !IsValidPhoneNumber(loginData.Phone) {
-		utils.Method(c, "invalid phone number")
-		return false
-	}
-	return true
-}
-
-func (loginData *LoginDataStep2) Validate(c *gin.Context) bool {
-	if !IsValidPhoneNumber(loginData.Phone) {
-		utils.Method(c, "invalid phone number")
-		return false
-	}
-	return true
-}
-
-func (sendOTPData *SendOTP) Validate(c *gin.Context) bool {
-	if !IsValidPhoneNumber(sendOTPData.PhoneNumber) {
-		utils.Method(c, "invalid phone number")
-		return false
-	}
-	return true
-}
-
-func (registerRequest *RegisterRequest) Validate(c *gin.Context) bool {
-	if !IsValidPhoneNumber(registerRequest.PhoneNumber) {
-		utils.Method(c, "invalid phone number")
-		return false
-	}
-	return true
 }
