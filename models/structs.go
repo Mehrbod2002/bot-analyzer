@@ -8,6 +8,7 @@ import (
 )
 
 type ProvidedData struct {
+	Symbol         string
 	High           float64
 	Low            float64
 	Close          float64

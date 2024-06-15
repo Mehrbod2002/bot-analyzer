@@ -17,11 +17,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var (
-	LastBarIndex = ""
-	LastBar      = models.Trade{}
-)
-
 func SetSetting(c *gin.Context) {
 	db, err := utils.GetDB(c)
 	if err != nil {
@@ -138,66 +133,37 @@ func TradeData(c *gin.Context) {
 		return
 	}
 
-	var countFlags = len(strings.Split(data.Signaler, "|")) - 2
 	var matchedCondition = false
 	volume, err := strconv.ParseFloat(data.Volume, 64)
 	hasFlag, _ := utils.StringToBool(data.Flag)
 
-	if LastBarIndex == data.Index {
-		hasFlagLast, _ := utils.StringToBool(LastBar.Flag)
-		var countFlagsLast = len(strings.Split(LastBar.Signaler, "|"))
-
-		if generalData.FirstType.HasFlag && (hasFlagLast || hasFlag) &&
-			(countFlags == generalData.FirstType.NumberCount ||
-				countFlagsLast == generalData.FirstType.NumberCount) &&
-			generalData.FirstType.MinVolumn <= volume {
-			matchedCondition = true
-			valid, data := models.ComputeTradeData(c, generalData, data, true)
-			if valid {
-				msg := data.String()
-				logger.SendMessage(msg)
-			}
-		}
-
+	if generalData.FirstType.NumberCount >= 0 {
+		countFlags := len(strings.Split(data.Signaler, "|")) - 2
 		if !matchedCondition &&
-			generalData.SecondType.HasFlag && (hasFlagLast || hasFlag) &&
-			(countFlags == generalData.SecondType.NumberCount ||
-				countFlagsLast == generalData.SecondType.NumberCount) &&
-			generalData.SecondType.MinVolumn <= volume {
+			(generalData.FirstType.HasFlag == hasFlag || generalData.JustSendSignal) &&
+			(generalData.FirstType.NumberCount == 0 || countFlags == generalData.FirstType.NumberCount) &&
+			(generalData.FirstType.MinVolumn <= volume || generalData.JustSendSignal) {
 			matchedCondition = true
-			valid, data := models.ComputeTradeData(c, generalData, data, true)
+			valid, computedData := models.ComputeTradeData(c, generalData, data, true)
 			if valid {
-				msg := data.String()
+				msg := computedData.String()
 				logger.SendMessage(msg)
 			}
 		}
-
-	} else {
-		LastBarIndex = data.Index
-		LastBar = data
 	}
 
-	if !matchedCondition &&
-		generalData.FirstType.HasFlag == hasFlag &&
-		countFlags == generalData.FirstType.NumberCount &&
-		generalData.FirstType.MinVolumn <= volume {
-		matchedCondition = true
-		valid, data := models.ComputeTradeData(c, generalData, data, true)
-		if valid {
-			msg := data.String()
-			logger.SendMessage(msg)
-		}
-	}
-
-	if !matchedCondition &&
-		generalData.SecondType.HasFlag == hasFlag &&
-		countFlags == generalData.FirstType.NumberCount &&
-		generalData.SecondType.MinVolumn <= volume {
-		matchedCondition = true
-		valid, data := models.ComputeTradeData(c, generalData, data, false)
-		if valid {
-			msg := data.String()
-			logger.SendMessage(msg)
+	if generalData.SecondType.NumberCount >= 0 {
+		countFlags := len(strings.Split(data.Signaler, "|")) - 2
+		if !matchedCondition &&
+			(generalData.SecondType.HasFlag == hasFlag || generalData.JustSendSignal) &&
+			(generalData.SecondType.NumberCount == 0 || countFlags == generalData.SecondType.NumberCount) &&
+			(generalData.SecondType.MinVolumn <= volume || generalData.JustSendSignal) {
+			matchedCondition = true
+			valid, computedData := models.ComputeTradeData(c, generalData, data, false)
+			if valid {
+				msg := computedData.String()
+				logger.SendMessage(msg)
+			}
 		}
 	}
 

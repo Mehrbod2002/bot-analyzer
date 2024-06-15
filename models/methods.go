@@ -247,6 +247,7 @@ func (user *User) GenerateToken() (string, error) {
 func (p ProvidedData) String() string {
 	var sb strings.Builder
 
+	sb.WriteString(fmt.Sprintf("Symbol: %s\n", p.Symbol))
 	sb.WriteString(fmt.Sprintf("High: %.2f\n", p.High))
 	sb.WriteString(fmt.Sprintf("Low: %.2f\n", p.Low))
 	sb.WriteString(fmt.Sprintf("Close: %.2f\n", p.Close))
@@ -341,6 +342,7 @@ func ComputeTradeData(c *gin.Context,
 		MagicNumber:    MagicNumber,
 		TradePrice:     TradePrice,
 		StopLimit:      StopLimit,
+		Symbol:         data.Symbol,
 	}
 	return true, &ProvidedData
 }
