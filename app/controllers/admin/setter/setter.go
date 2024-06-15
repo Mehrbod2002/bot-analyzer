@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"bot/logger"
 	"bot/models"
 	"bot/utils"
 	"context"
@@ -14,6 +15,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
+)
+
+var (
+	LastBarIndex = ""
+	LastBar      = models.Trade{}
 )
 
 func SetSetting(c *gin.Context) {
@@ -132,33 +138,67 @@ func TradeData(c *gin.Context) {
 		return
 	}
 
-	var countFlags = len(strings.Split(data.Signaler, "|"))
+	var countFlags = len(strings.Split(data.Signaler, "|")) - 2
 	var matchedCondition = false
 	volume, err := strconv.ParseFloat(data.Volume, 64)
-	if !generalData.JustSendSignal &&
-		(generalData.FirstType.HasFlag && data.Flag &&
-			generalData.FirstType.NumberCount != 0 &&
-			countFlags == generalData.FirstType.NumberCount &&
-			generalData.FirstType.MinVolumn != 0 &&
-			generalData.FirstType.MinVolumn <= volume) {
-		matchedCondition = true
-		// valid, data := models.ComputeTradeData(c, generalData, data, true)
-		// if valid {
-		// 	logger.()
-		// }
+	hasFlag, _ := utils.StringToBool(data.Flag)
+
+	if LastBarIndex == data.Index {
+		hasFlagLast, _ := utils.StringToBool(LastBar.Flag)
+		var countFlagsLast = len(strings.Split(LastBar.Signaler, "|"))
+
+		if generalData.FirstType.HasFlag && (hasFlagLast || hasFlag) &&
+			(countFlags == generalData.FirstType.NumberCount ||
+				countFlagsLast == generalData.FirstType.NumberCount) &&
+			generalData.FirstType.MinVolumn <= volume {
+			matchedCondition = true
+			valid, data := models.ComputeTradeData(c, generalData, data, true)
+			if valid {
+				msg := data.String()
+				logger.SendMessage(msg)
+			}
+		}
+
+		if !matchedCondition &&
+			generalData.SecondType.HasFlag && (hasFlagLast || hasFlag) &&
+			(countFlags == generalData.SecondType.NumberCount ||
+				countFlagsLast == generalData.SecondType.NumberCount) &&
+			generalData.SecondType.MinVolumn <= volume {
+			matchedCondition = true
+			valid, data := models.ComputeTradeData(c, generalData, data, true)
+			if valid {
+				msg := data.String()
+				logger.SendMessage(msg)
+			}
+		}
+
+	} else {
+		LastBarIndex = data.Index
+		LastBar = data
 	}
 
 	if !matchedCondition &&
-		!generalData.JustSendSignal &&
-		generalData.FirstType.HasFlag && data.Flag &&
-		generalData.FirstType.NumberCount != 0 &&
+		generalData.FirstType.HasFlag == hasFlag &&
 		countFlags == generalData.FirstType.NumberCount &&
-		generalData.SecondType.MinVolumn != 0 &&
+		generalData.FirstType.MinVolumn <= volume {
+		matchedCondition = true
+		valid, data := models.ComputeTradeData(c, generalData, data, true)
+		if valid {
+			msg := data.String()
+			logger.SendMessage(msg)
+		}
+	}
+
+	if !matchedCondition &&
+		generalData.SecondType.HasFlag == hasFlag &&
+		countFlags == generalData.FirstType.NumberCount &&
 		generalData.SecondType.MinVolumn <= volume {
 		matchedCondition = true
-		// valid, data := models.ComputeTradeData(c, generalData, data, false)
-		// if valid {
-		// }
+		valid, data := models.ComputeTradeData(c, generalData, data, false)
+		if valid {
+			msg := data.String()
+			logger.SendMessage(msg)
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Successfully received data"})

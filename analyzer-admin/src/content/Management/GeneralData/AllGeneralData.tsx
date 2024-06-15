@@ -249,7 +249,7 @@ const AllGeneralData: FC<UsersTableProps> = ({ GeneralData }) => {
                       gutterBottom
                       noWrap
                     >
-                      {user.FromTime}
+                      {user.from_time}
                     </Typography>
                   </TableCell>
                   <TableCell>
@@ -260,7 +260,7 @@ const AllGeneralData: FC<UsersTableProps> = ({ GeneralData }) => {
                       gutterBottom
                       noWrap
                     >
-                      {user.ToTime}
+                      {user.to_time}
                     </Typography>
                   </TableCell>
                   <TableCell>

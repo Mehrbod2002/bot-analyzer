@@ -22,7 +22,8 @@ type ProvidedData struct {
 }
 
 type Trade struct {
-	Flag      bool   `json:"flag"`
+	Index     string `json:"index"`
+	Flag      string `json:"flag"`
 	Signaler  string `json:"signaler"`
 	Volume    string `json:"volume"`
 	Condition string `json:"condition"`

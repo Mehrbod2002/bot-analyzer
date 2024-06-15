@@ -16,6 +16,7 @@ import (
 	"github.com/golang-jwt/jwt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func IsValidEmail(email string) bool {
@@ -272,7 +273,7 @@ func ComputeTradeData(c *gin.Context,
 
 	var runningTrades []Running
 	cursor, err := db.Collection("running_trades").Find(context.Background(), bson.M{})
-	if err != nil {
+	if err != nil && err != mongo.ErrNoDocuments {
 		utils.InternalError(c)
 		return false, nil
 	}

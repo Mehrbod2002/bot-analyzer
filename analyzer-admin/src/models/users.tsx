@@ -60,8 +60,8 @@ export interface GeneralData {
   stop_limit: number;
   rounds: number;
   magic_number: number;
-  FromTime: string;
-  ToTime: string;
+  from_time: string;
+  to_time: string;
   compensate_rounds: number;
   make_position_when_not_round_closed: boolean;
   max_trade_volumn: number;

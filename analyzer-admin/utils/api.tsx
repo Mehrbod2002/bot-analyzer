@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { toast } from 'react-toastify';
 
-export const baseUrlServer = "http://127.0.0.1:3010";
+export const baseUrlServer = "https://newfeed.londonfinancial.com";
 
 export const request = axios.create({
   baseURL: baseUrlServer,

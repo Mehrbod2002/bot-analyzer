@@ -42,8 +42,8 @@ function CreateGeneralData() {
         stop_limit: 0,
         rounds: 0,
         magic_number: 0,
-        FromTime: "00:00",
-        ToTime: "23:00",
+        from_time: "00:00",
+        to_time: "23:00",
         compensate_rounds: 0,
         make_position_when_not_round_closed: false,
         max_trade_volumn: 0,
@@ -90,7 +90,7 @@ function CreateGeneralData() {
                         Authorization: token
                     });
                     if (valid) {
-                        setFormData(response.data);
+                        setFormData(response.general_data);
                     } else {
                         console.error('Failed to fetch GeneralData');
                     }
@@ -148,8 +148,7 @@ function CreateGeneralData() {
                                                 checked={formData.first_type.has_flag}
                                                 onChange={handleChange}
                                             />
-                                        }>
-                                    </FormControlLabel>
+                                        } />
                                     <TextField
                                         label="Min Volumn"
                                         id="first-type-min-volumn"
@@ -176,8 +175,7 @@ function CreateGeneralData() {
                                                 checked={formData.second_type.has_flag}
                                                 onChange={handleChange}
                                             />
-                                        }>
-                                    </FormControlLabel>
+                                        } />
                                     <TextField
                                         label="Min Volumn"
                                         id="second-type-min-volumn"
@@ -194,8 +192,7 @@ function CreateGeneralData() {
                                                 name="just_send_signal"
                                                 checked={formData.just_send_signal}
                                                 onChange={handleChange}
-                                            />}>
-                                    </FormControlLabel>
+                                            />} />
                                     <FormControlLabel
                                         label="Sync Symbols"
                                         control={
@@ -205,8 +202,7 @@ function CreateGeneralData() {
                                                 name="sync_symbols"
                                                 checked={formData.sync_symbols}
                                                 onChange={handleChange}
-                                            />}>
-                                    </FormControlLabel>
+                                            />} />
                                     <TextField
                                         required
                                         id="first-trade"
@@ -224,8 +220,7 @@ function CreateGeneralData() {
                                                 name="first_trade_mode_is_amount"
                                                 checked={formData.first_trade_mode_is_amount}
                                                 onChange={handleChange}
-                                            />}>
-                                    </FormControlLabel>
+                                            />} />
                                     <TextField
                                         required
                                         id="stop-limit"
@@ -292,16 +287,18 @@ function CreateGeneralData() {
                                     <Divider sx={{ my: 3 }} />
                                     <TextField
                                         required
+                                        name="from_time"
                                         label="Active Clocl UTC From"
                                         type="text"
-                                        value={formData.FromTime}
+                                        value={formData.from_time}
                                         onChange={handleChange}
                                     />
                                     <TextField
                                         required
+                                        name="to_tme"
                                         label="Active Clocl UTC To"
                                         type="text"
-                                        value={formData.ToTime}
+                                        value={formData.to_time}
                                         onChange={handleChange}
                                     />
                                     <Divider sx={{ my: 3 }} />

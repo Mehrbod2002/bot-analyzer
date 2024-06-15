@@ -34,6 +34,7 @@ func SetupRouter() *gin.Engine {
 			"http://0.0.0.0:3001",
 			"http://localhost:3001",
 			"http://127.0.0.1:5173",
+			"https://newfeed.londonfinancial.com",
 		},
 		AllowMethods: []string{"PUT", "PATCH", "GET", "POST", "HEAD", "DELETE"},
 		AllowHeaders: []string{
@@ -45,7 +46,9 @@ func SetupRouter() *gin.Engine {
 		AllowOriginFunc: func(origin string) bool {
 			return origin == "http://0.0.0.0:3001" ||
 				origin == "http://localhost:3001" ||
-				origin == "http://127.0.0.1:5173"
+				origin == "http://127.0.0.1:5173" ||
+				origin == "https://newfeed.londonfinancial.com"
+
 		},
 	}))
 

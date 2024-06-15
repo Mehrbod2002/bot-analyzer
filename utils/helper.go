@@ -14,6 +14,17 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+func StringToBool(s string) (bool, error) {
+	switch strings.ToLower(s) {
+	case "true":
+		return true, nil
+	case "false":
+		return false, nil
+	default:
+		return false, fmt.Errorf("invalid boolean value: %s", s)
+	}
+}
+
 func BadBinding(c *gin.Context) {
 	c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 		"success": false,
@@ -163,6 +174,10 @@ func AdminAuthMiddleware() gin.HandlerFunc {
 func IsValidTime(start, end string) (bool, error) {
 	const timeLayout = "15:04"
 
+	if start == "" || end == "" {
+		return false, fmt.Errorf("start and end times cannot be empty")
+	}
+
 	_, err := time.Parse(timeLayout, start)
 	if err != nil {
 		return false, fmt.Errorf("invalid start time format: %v", err)
@@ -174,16 +189,17 @@ func IsValidTime(start, end string) (bool, error) {
 	}
 
 	now := time.Now().UTC()
-
 	nowDate := now.Format("2006-01-02")
-	startTimeToday, err := time.Parse(time.RFC3339, fmt.Sprintf("%sT%s:00Z", nowDate, start))
+
+	startTimeToday, err := time.ParseInLocation("2006-01-02 15:04", fmt.Sprintf("%s %s", nowDate, start), time.UTC)
 	if err != nil {
 		return false, fmt.Errorf("could not create start time: %v", err)
 	}
-	endTimeToday, err := time.Parse(time.RFC3339, fmt.Sprintf("%sT%s:00Z", nowDate, end))
+
+	endTimeToday, err := time.ParseInLocation("2006-01-02 15:04", fmt.Sprintf("%s %s", nowDate, end), time.UTC)
 	if err != nil {
 		return false, fmt.Errorf("could not create end time: %v", err)
 	}
 
-	return now.After(startTimeToday) && now.Before(endTimeToday), nil
+	return now.Equal(startTimeToday) || (now.After(startTimeToday) && now.Before(endTimeToday)), nil
 }
