@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math"
 	"os"
 	"regexp"
 	"strconv"
@@ -18,6 +19,53 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
+
+func CalculateIncrement(value float64) float64 {
+	precision := GetPrecision(value)
+	return math.Pow10(-precision)
+}
+
+func formatFloat(value float64) float64 {
+	str := fmt.Sprintf("%.15f", value)
+	str = strings.TrimRight(str, "0")
+	str = strings.TrimRight(str, ".")
+	result, err := strconv.ParseFloat(str, 64)
+	if err != nil {
+		return value
+	}
+
+	return result
+}
+
+func FormatFloatPrecision(value float64, precision int) string {
+	if precision < 0 {
+		precision = 0
+	} else if precision > 10 {
+		precision = 10
+	}
+	format := fmt.Sprintf("%%.%df", precision)
+	return fmt.Sprintf(format, value)
+}
+
+func FormatFloat(value float64) string {
+	precision := GetPrecision(value)
+	if precision < 0 {
+		precision = 0
+	} else if precision > 10 {
+		precision = 10
+	}
+	format := fmt.Sprintf("%%.%df", precision)
+	return fmt.Sprintf(format, value)
+}
+
+func GetPrecision(value float64) int {
+	str := strconv.FormatFloat(value, 'f', -1, 64)
+	idx := strings.IndexByte(str, '.')
+	if idx == -1 {
+		return 0
+	}
+	return len(str) - idx - 1
+}
 
 func IsValidEmail(email string) bool {
 	emailRegex := `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
@@ -248,15 +296,15 @@ func (p ProvidedData) String() string {
 	var sb strings.Builder
 
 	sb.WriteString(fmt.Sprintf("Symbol: %s\n", p.Symbol))
-	sb.WriteString(fmt.Sprintf("High: %.2f\n", p.High))
-	sb.WriteString(fmt.Sprintf("Low: %.2f\n", p.Low))
-	sb.WriteString(fmt.Sprintf("Close: %.2f\n", p.Close))
-	sb.WriteString(fmt.Sprintf("Open: %.2f\n", p.Open))
-	sb.WriteString(fmt.Sprintf("Trade Price: %.2f\n", p.TradePrice))
-	sb.WriteString(fmt.Sprintf("Stop Limit: %.2f\n", p.StopLimit))
-	sb.WriteString(fmt.Sprintf("TP: %.2f\n", p.Tp))
-	sb.WriteString(fmt.Sprintf("Magic Number: %.2f\n", p.MagicNumber))
-	sb.WriteString(fmt.Sprintf("Next Trade Price: %.2f\n", p.NextTradePrice))
+	sb.WriteString(fmt.Sprintf("High: %s\n", FormatFloat(p.High)))
+	sb.WriteString(fmt.Sprintf("Low: %s\n", FormatFloat(p.Low)))
+	sb.WriteString(fmt.Sprintf("Close: %s\n", FormatFloat(p.Close)))
+	sb.WriteString(fmt.Sprintf("Open: %s\n", FormatFloat(p.Open)))
+	sb.WriteString(fmt.Sprintf("Trade Price: %s\n", FormatFloat(p.TradePrice)))
+	sb.WriteString(fmt.Sprintf("Stop Limit: %s\n", FormatFloat(p.StopLimit)))
+	sb.WriteString(fmt.Sprintf("TP: %s\n", FormatFloat(p.Tp)))
+	sb.WriteString(fmt.Sprintf("Magic Number: %s\n", FormatFloat(p.MagicNumber)))
+	sb.WriteString(fmt.Sprintf("Next Trade Price: %s\n", FormatFloat(p.NextTradePrice)))
 	sb.WriteString(fmt.Sprintf("Next Trade Type: %s\n", p.NextTradeType))
 	sb.WriteString(fmt.Sprintf("Trade Type: %s\n", p.TradeType))
 
@@ -311,13 +359,15 @@ func ComputeTradeData(c *gin.Context,
 	NextTradePrice := 0.0
 	TradeType := data.Condition
 	if TradeType == "long" {
-		StopLimit = ((generalData.StopLimit / 100) * high) + high
-		Tp = high + (open + high)
+		Tp = (high - low) + high
+		StopLimit = low - (CalculateIncrement(close) * generalData.StopLimit)
+		StopLimit = formatFloat(StopLimit)
 		NextTypeTrade = "Sell Stop"
 		NextTradePrice = StopLimit
 	} else if TradeType == "short" {
-		StopLimit = low - ((generalData.StopLimit / 100) * low)
-		Tp = low - (close - low)
+		Tp = low - (high - low)
+		StopLimit = high + (CalculateIncrement(close) * generalData.StopLimit)
+		StopLimit = formatFloat(StopLimit)
 		NextTradePrice = StopLimit
 	}
 
