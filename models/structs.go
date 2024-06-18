@@ -84,8 +84,10 @@ type GeneralData struct {
 	MakePositionWhenNotRoundClosed bool               `bson:"make_position_when_not_round_closed" json:"make_position_when_not_round_closed"`
 	MaxTradesVolumn                float64            `bson:"max_trade_volumn" json:"max_trade_volumn"`
 	MaxLossToCloseAll              float64            `bson:"max_loss_to_close_all" json:"max_loss_to_close_all"`
-	ValuesCandels                  float64            `bson:"values_candels" json:"values_candels"`
-	DiffPip                        float64            `bson:"diff_pip" json:"diff_pip"`
+	ValuesCandelsStr               string             `bson:"values_candels" json:"values_candels"`
+	ValuesCandels                  float64            `bson:"values_candels_float" json:"values_candels_float"`
+	DiffPipStr                     string             `bson:"diff_pip" json:"diff_pip"`
+	DiffPip                        float64            `bson:"diff_pip_float" json:"diff_pip_float"`
 }
 
 type Claims struct {

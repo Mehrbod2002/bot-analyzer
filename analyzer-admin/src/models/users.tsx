@@ -66,6 +66,6 @@ export interface GeneralData {
   make_position_when_not_round_closed: boolean;
   max_trade_volumn: number;
   max_loss_to_close_all: number;
-  values_candels: number;
-  diff_pip: number;
+  values_candels: string;
+  diff_pip: string;
 }

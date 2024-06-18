@@ -79,11 +79,13 @@ func SetSetting(c *gin.Context) {
 	if generalData.MaxLossToCloseAll != 0 {
 		update["$set"].(bson.M)["max_loss_to_close_all"] = generalData.MaxLossToCloseAll
 	}
-	if generalData.DiffPip != 0 {
-		update["$set"].(bson.M)["diff_pip"] = generalData.MaxLossToCloseAll
+	if generalData.DiffPipStr != "" {
+		value, _ := strconv.ParseFloat(generalData.DiffPipStr, 64)
+		update["$set"].(bson.M)["diff_pip_float"] = value
 	}
-	if generalData.ValuesCandels != 0 {
-		update["$set"].(bson.M)["values_candels"] = generalData.MaxLossToCloseAll
+	if generalData.ValuesCandelsStr != "" {
+		value, _ := strconv.ParseFloat(generalData.ValuesCandelsStr, 64)
+		update["$set"].(bson.M)["values_candels_float"] = value
 	}
 
 	if len(update["$set"].(bson.M)) == 0 {
