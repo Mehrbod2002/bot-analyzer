@@ -20,6 +20,30 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+func CalculateDiff(value, open, high, close, low, diff float64) bool {
+	precision := GetPrecision(value)
+	pip := math.Pow10(-precision) * diff
+
+	matched := false
+	if open <= pip && high <= pip {
+		matched = true
+	}
+
+	if open <= pip && low <= pip {
+		matched = true
+	}
+
+	if close <= pip && high <= pip {
+		matched = true
+	}
+
+	if close <= pip && low <= pip {
+		matched = true
+	}
+
+	return matched
+}
+
 func CalculateIncrement(value float64) float64 {
 	precision := GetPrecision(value)
 	return math.Pow10(-precision)
@@ -351,6 +375,11 @@ func ComputeTradeData(c *gin.Context,
 	low, _ := strconv.ParseFloat(data.Low, 64)
 	close, _ := strconv.ParseFloat(data.Close, 64)
 	open, _ := strconv.ParseFloat(data.Open, 64)
+
+	if CalculateDiff(close, open, high, close, low, generalData.DiffPip) {
+		return false, nil
+	}
+
 	TradePrice := 0.0
 	StopLimit := 0.0
 	Tp := 0.0
@@ -359,13 +388,13 @@ func ComputeTradeData(c *gin.Context,
 	NextTradePrice := 0.0
 	TradeType := data.Condition
 	if TradeType == "long" {
-		Tp = (high - low) + high
+		Tp = formatFloat((high - low) + high)
 		StopLimit = low - (CalculateIncrement(close) * generalData.StopLimit)
 		StopLimit = formatFloat(StopLimit)
 		NextTypeTrade = "Sell Stop"
 		NextTradePrice = StopLimit
 	} else if TradeType == "short" {
-		Tp = low - (high - low)
+		Tp = formatFloat(low - (high - low))
 		StopLimit = high + (CalculateIncrement(close) * generalData.StopLimit)
 		StopLimit = formatFloat(StopLimit)
 		NextTradePrice = StopLimit

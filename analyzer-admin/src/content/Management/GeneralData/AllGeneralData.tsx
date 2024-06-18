@@ -91,6 +91,8 @@ const AllGeneralData: FC<UsersTableProps> = ({ GeneralData }) => {
               <TableCell>Make Position When Not Round Closed</TableCell>
               <TableCell>Max Trade Volume</TableCell>
               <TableCell>Max Loss To Close All</TableCell>
+              <TableCell>Values Candels</TableCell>
+              <TableCell>Diff Pip</TableCell>
               <TableCell align="right">Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -305,6 +307,28 @@ const AllGeneralData: FC<UsersTableProps> = ({ GeneralData }) => {
                       noWrap
                     >
                       {user.max_loss_to_close_all}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography
+                      variant="body1"
+                      fontWeight="bold"
+                      color="text.primary"
+                      gutterBottom
+                      noWrap
+                    >
+                      {user.values_candels}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography
+                      variant="body1"
+                      fontWeight="bold"
+                      color="text.primary"
+                      gutterBottom
+                      noWrap
+                    >
+                      {user.diff_pip}
                     </Typography>
                   </TableCell>
                   <TableCell align="right">

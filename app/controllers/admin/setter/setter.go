@@ -79,6 +79,12 @@ func SetSetting(c *gin.Context) {
 	if generalData.MaxLossToCloseAll != 0 {
 		update["$set"].(bson.M)["max_loss_to_close_all"] = generalData.MaxLossToCloseAll
 	}
+	if generalData.DiffPip != 0 {
+		update["$set"].(bson.M)["diff_pip"] = generalData.MaxLossToCloseAll
+	}
+	if generalData.ValuesCandels != 0 {
+		update["$set"].(bson.M)["values_candels"] = generalData.MaxLossToCloseAll
+	}
 
 	if len(update["$set"].(bson.M)) == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "No valid fields to update"})
@@ -143,11 +149,24 @@ func TradeData(c *gin.Context) {
 			(generalData.FirstType.HasFlag == hasFlag || generalData.JustSendSignal) &&
 			(generalData.FirstType.NumberCount == 0 || countFlags == generalData.FirstType.NumberCount) &&
 			(generalData.FirstType.MinVolumn <= volume || generalData.JustSendSignal) {
-			matchedCondition = true
-			valid, computedData := models.ComputeTradeData(c, generalData, data, true)
-			if valid {
-				msg := computedData.String()
-				logger.SendMessage(msg)
+
+			matched := false
+			if generalData.ValuesCandels != 0 {
+				values, _ := strconv.ParseFloat(data.ValuesPercentage, 64)
+				if (generalData.ValuesCandels*-1) < values && values < generalData.ValuesCandels {
+					matched = true
+				} else {
+					matched = false
+				}
+			}
+
+			if matched {
+				matchedCondition = true
+				valid, computedData := models.ComputeTradeData(c, generalData, data, true)
+				if valid {
+					msg := computedData.String()
+					logger.SendMessage(msg)
+				}
 			}
 		}
 	}
@@ -158,11 +177,24 @@ func TradeData(c *gin.Context) {
 			(generalData.SecondType.HasFlag == hasFlag || generalData.JustSendSignal) &&
 			(generalData.SecondType.NumberCount == 0 || countFlags == generalData.SecondType.NumberCount) &&
 			(generalData.SecondType.MinVolumn <= volume || generalData.JustSendSignal) {
-			matchedCondition = true
-			valid, computedData := models.ComputeTradeData(c, generalData, data, false)
-			if valid {
-				msg := computedData.String()
-				logger.SendMessage(msg)
+
+			matched := false
+			if generalData.ValuesCandels != 0 {
+				values, _ := strconv.ParseFloat(data.ValuesPercentage, 64)
+				if (generalData.ValuesCandels*-1) < values && values < generalData.ValuesCandels {
+					matched = true
+				} else {
+					matched = false
+				}
+			}
+
+			if matched {
+				matchedCondition = true
+				valid, computedData := models.ComputeTradeData(c, generalData, data, false)
+				if valid {
+					msg := computedData.String()
+					logger.SendMessage(msg)
+				}
 			}
 		}
 	}

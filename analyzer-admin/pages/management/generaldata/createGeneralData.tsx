@@ -48,6 +48,8 @@ function CreateGeneralData() {
         make_position_when_not_round_closed: false,
         max_trade_volumn: 0,
         max_loss_to_close_all: 0,
+        values_candels: 0,
+        diff_pip: 0,
     });
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -184,6 +186,22 @@ function CreateGeneralData() {
                                         onChange={handleChange}
                                     />
                                     <Divider sx={{ my: 3 }} />
+                                    <TextField
+                                        label="Values Candels"
+                                        id="values-candels"
+                                        name="values_candels"
+                                        type="number"
+                                        value={formData.values_candels}
+                                        onChange={handleChange}
+                                    />
+                                    <TextField
+                                        label="Diff Pips"
+                                        id="diff_pip"
+                                        name="diff_pip"
+                                        type="number"
+                                        value={formData.diff_pip}
+                                        onChange={handleChange}
+                                    />
                                     <FormControlLabel
                                         label="Just Send a signal"
                                         control={

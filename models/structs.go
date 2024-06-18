@@ -23,21 +23,22 @@ type ProvidedData struct {
 }
 
 type Trade struct {
-	Index     string `json:"index"`
-	Flag      string `json:"flag"`
-	Signaler  string `json:"signaler"`
-	Volume    string `json:"volume"`
-	Condition string `json:"condition"`
-	Symbol    string `json:"symbol"`
-	Time      string `json:"time"`
-	Open      string `json:"open"`
-	High      string `json:"high"`
-	Low       string `json:"low"`
-	Close     string `json:"close"`
-	RSI       string `json:"rsi"`
-	MACD      string `json:"macd"`
-	Signal    string `json:"signal"`
-	Histogram string `json:"histogram"`
+	ValuesPercentage string `json:"values"`
+	Index            string `json:"index"`
+	Flag             string `json:"flag"`
+	Signaler         string `json:"signaler"`
+	Volume           string `json:"volume"`
+	Condition        string `json:"condition"`
+	Symbol           string `json:"symbol"`
+	Time             string `json:"time"`
+	Open             string `json:"open"`
+	High             string `json:"high"`
+	Low              string `json:"low"`
+	Close            string `json:"close"`
+	RSI              string `json:"rsi"`
+	MACD             string `json:"macd"`
+	Signal           string `json:"signal"`
+	Histogram        string `json:"histogram"`
 }
 
 type User struct {
@@ -83,6 +84,8 @@ type GeneralData struct {
 	MakePositionWhenNotRoundClosed bool               `bson:"make_position_when_not_round_closed" json:"make_position_when_not_round_closed"`
 	MaxTradesVolumn                float64            `bson:"max_trade_volumn" json:"max_trade_volumn"`
 	MaxLossToCloseAll              float64            `bson:"max_loss_to_close_all" json:"max_loss_to_close_all"`
+	ValuesCandels                  float64            `bson:"values_candels" json:"values_candels"`
+	DiffPip                        float64            `bson:"diff_pip" json:"diff_pip"`
 }
 
 type Claims struct {
