@@ -145,6 +145,17 @@ func TradeData(c *gin.Context) {
 	volume, err := strconv.ParseFloat(data.Volume, 64)
 	hasFlag, _ := utils.StringToBool(data.Flag)
 
+	if generalData.ValuesCandels != 0 {
+		values, _ := strconv.ParseFloat(data.ValuesPercentage, 64)
+		if values < (generalData.ValuesCandels*-1) && generalData.ValuesCandels < values {
+			valid, computedData := models.ComputeTradeData(c, generalData, data, true)
+			if valid {
+				msg := computedData.String()
+				logger.SendMessage(msg)
+			}
+		}
+	}
+
 	if generalData.FirstType.NumberCount >= 0 {
 		countFlags := len(strings.Split(data.Signaler, "|")) - 2
 		if !matchedCondition &&
@@ -155,7 +166,7 @@ func TradeData(c *gin.Context) {
 			matched := false
 			if generalData.ValuesCandels != 0 {
 				values, _ := strconv.ParseFloat(data.ValuesPercentage, 64)
-				if (generalData.ValuesCandels*-1) < values && values < generalData.ValuesCandels {
+				if values < (generalData.ValuesCandels*-1) && generalData.ValuesCandels < values {
 					matched = true
 				} else {
 					matched = false
