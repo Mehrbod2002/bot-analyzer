@@ -79,13 +79,11 @@ func SetSetting(c *gin.Context) {
 	if generalData.MaxLossToCloseAll != 0 {
 		update["$set"].(bson.M)["max_loss_to_close_all"] = generalData.MaxLossToCloseAll
 	}
-	if generalData.DiffPipStr != "" {
-		value, _ := strconv.ParseFloat(generalData.DiffPipStr, 64)
-		update["$set"].(bson.M)["diff_pip_float"] = value
+	if generalData.DiffPip != "" {
+		update["$set"].(bson.M)["diff_pip"] = generalData.DiffPip
 	}
-	if generalData.ValuesCandelsStr != "" {
-		value, _ := strconv.ParseFloat(generalData.ValuesCandelsStr, 64)
-		update["$set"].(bson.M)["values_candels_float"] = value
+	if generalData.ValuesCandels != "" {
+		update["$set"].(bson.M)["values_candels"] = generalData.ValuesCandels
 	}
 
 	if len(update["$set"].(bson.M)) == 0 {
@@ -145,9 +143,12 @@ func TradeData(c *gin.Context) {
 	volume, err := strconv.ParseFloat(data.Volume, 64)
 	hasFlag, _ := utils.StringToBool(data.Flag)
 
-	if generalData.ValuesCandels != 0 {
+	candelValues, _ := strconv.ParseFloat(generalData.ValuesCandels, 64)
+
+	if candelValues != 0 {
 		values, _ := strconv.ParseFloat(data.ValuesPercentage, 64)
-		if values < (generalData.ValuesCandels*-1) && generalData.ValuesCandels < values {
+
+		if values < (candelValues*-1) && candelValues < values {
 			valid, computedData := models.ComputeTradeData(c, generalData, data, true)
 			if valid {
 				msg := computedData.String()
@@ -164,9 +165,10 @@ func TradeData(c *gin.Context) {
 			(generalData.FirstType.MinVolumn <= volume || generalData.JustSendSignal) {
 
 			matched := false
-			if generalData.ValuesCandels != 0 {
+			candelValues, _ := strconv.ParseFloat(generalData.ValuesCandels, 64)
+			if candelValues != 0 {
 				values, _ := strconv.ParseFloat(data.ValuesPercentage, 64)
-				if values < (generalData.ValuesCandels*-1) && generalData.ValuesCandels < values {
+				if values < (candelValues*-1) && candelValues < values {
 					matched = true
 				} else {
 					matched = false
@@ -192,9 +194,10 @@ func TradeData(c *gin.Context) {
 			(generalData.SecondType.MinVolumn <= volume || generalData.JustSendSignal) {
 
 			matched := false
-			if generalData.ValuesCandels != 0 {
+			candelValues, _ := strconv.ParseFloat(generalData.ValuesCandels, 64)
+			if candelValues != 0 {
 				values, _ := strconv.ParseFloat(data.ValuesPercentage, 64)
-				if (generalData.ValuesCandels*-1) < values && values < generalData.ValuesCandels {
+				if (candelValues*-1) < values && values < candelValues {
 					matched = true
 				} else {
 					matched = false

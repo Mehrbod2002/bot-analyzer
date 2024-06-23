@@ -376,7 +376,8 @@ func ComputeTradeData(c *gin.Context,
 	close, _ := strconv.ParseFloat(data.Close, 64)
 	open, _ := strconv.ParseFloat(data.Open, 64)
 
-	if CalculateDiff(close, open, high, close, low, generalData.DiffPip) {
+	diffPip, _ := strconv.ParseFloat(generalData.DiffPip, 64)
+	if CalculateDiff(close, open, high, close, low, diffPip) {
 		return false, nil
 	}
 
