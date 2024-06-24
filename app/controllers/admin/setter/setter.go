@@ -146,7 +146,9 @@ func TradeData(c *gin.Context) {
 	candelValues, _ := strconv.ParseFloat(generalData.ValuesCandels, 64)
 
 	if candelValues != 0 {
-		values, _ := strconv.ParseFloat(data.ValuesPercentage, 64)
+		closePrev, _ := strconv.ParseFloat(data.ClosePrev, 64)
+		close, _ := strconv.ParseFloat(data.Close, 64)
+		values := (close - closePrev) / closePrev * 100
 
 		if values < (candelValues*-1) && candelValues < values {
 			valid, computedData := models.ComputeTradeData(c, generalData, data, true)
@@ -154,6 +156,8 @@ func TradeData(c *gin.Context) {
 				msg := computedData.String()
 				logger.SendMessage(msg)
 			}
+		} else {
+			return
 		}
 	}
 
@@ -164,24 +168,11 @@ func TradeData(c *gin.Context) {
 			(generalData.FirstType.NumberCount == 0 || countFlags == generalData.FirstType.NumberCount) &&
 			(generalData.FirstType.MinVolumn <= volume || generalData.JustSendSignal) {
 
-			matched := false
-			candelValues, _ := strconv.ParseFloat(generalData.ValuesCandels, 64)
-			if candelValues != 0 {
-				values, _ := strconv.ParseFloat(data.ValuesPercentage, 64)
-				if values < (candelValues*-1) && candelValues < values {
-					matched = true
-				} else {
-					matched = false
-				}
-			}
-
-			if matched {
-				matchedCondition = true
-				valid, computedData := models.ComputeTradeData(c, generalData, data, true)
-				if valid {
-					msg := computedData.String()
-					logger.SendMessage(msg)
-				}
+			matchedCondition = true
+			valid, computedData := models.ComputeTradeData(c, generalData, data, true)
+			if valid {
+				msg := computedData.String()
+				logger.SendMessage(msg)
 			}
 		}
 	}
@@ -193,24 +184,11 @@ func TradeData(c *gin.Context) {
 			(generalData.SecondType.NumberCount == 0 || countFlags == generalData.SecondType.NumberCount) &&
 			(generalData.SecondType.MinVolumn <= volume || generalData.JustSendSignal) {
 
-			matched := false
-			candelValues, _ := strconv.ParseFloat(generalData.ValuesCandels, 64)
-			if candelValues != 0 {
-				values, _ := strconv.ParseFloat(data.ValuesPercentage, 64)
-				if (candelValues*-1) < values && values < candelValues {
-					matched = true
-				} else {
-					matched = false
-				}
-			}
-
-			if matched {
-				matchedCondition = true
-				valid, computedData := models.ComputeTradeData(c, generalData, data, false)
-				if valid {
-					msg := computedData.String()
-					logger.SendMessage(msg)
-				}
+			matchedCondition = true
+			valid, computedData := models.ComputeTradeData(c, generalData, data, false)
+			if valid {
+				msg := computedData.String()
+				logger.SendMessage(msg)
 			}
 		}
 	}

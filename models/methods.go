@@ -22,22 +22,22 @@ import (
 
 func CalculateDiff(value, open, high, close, low, diff float64) bool {
 	precision := GetPrecision(value)
-	pip := math.Pow10(-precision) * diff
+	pip := (math.Pow10(-precision) * diff) * -1
 
 	matched := false
-	if open <= pip && high <= pip {
+	if (high-open)*-1 <= pip {
 		matched = true
 	}
 
-	if open <= pip && low <= pip {
+	if -1*(open-low) <= pip {
 		matched = true
 	}
 
-	if close <= pip && high <= pip {
+	if -1*(high-close) <= pip {
 		matched = true
 	}
 
-	if close <= pip && low <= pip {
+	if -1*(close*low) <= pip {
 		matched = true
 	}
 
@@ -337,7 +337,9 @@ func (p ProvidedData) String() string {
 
 func ComputeTradeData(c *gin.Context,
 	generalData GeneralData,
-	data Trade, firstCondition bool) (bool, *ProvidedData) {
+	data Trade,
+	firstCondition bool,
+) (bool, *ProvidedData) {
 	db, DBerr := utils.GetDB(c)
 	if DBerr != nil {
 		log.Println(DBerr)
