@@ -23,21 +23,21 @@ import (
 func CalculateDiff(value, open, high, close, low, diff float64) bool {
 	precision := GetPrecision(value)
 	pip := (math.Pow10(-precision) * diff) * -1
-
 	matched := false
-	if (high-open)*-1 <= pip {
+
+	if (high-open)*-1 >= pip {
 		matched = true
 	}
 
-	if -1*(open-low) <= pip {
+	if -1*(open-low) >= pip {
 		matched = true
 	}
 
-	if -1*(high-close) <= pip {
+	if -1*(high-close) >= pip {
 		matched = true
 	}
 
-	if -1*(close*low) <= pip {
+	if -1*(close*low) >= pip {
 		matched = true
 	}
 
@@ -59,6 +59,18 @@ func formatFloat(value float64) float64 {
 	}
 
 	return result
+}
+
+func FormatFloatPrecisionFloat(value float64) float64 {
+	precision := GetPrecision(value)
+	if precision < 0 {
+		precision = 0
+	} else if precision > 10 {
+		precision = 10
+	}
+	format := fmt.Sprintf("%%.%df", precision)
+	floatVal, _ := strconv.ParseFloat(format, 64)
+	return floatVal
 }
 
 func FormatFloatPrecision(value float64, precision int) string {
@@ -325,8 +337,8 @@ func (p ProvidedData) String() string {
 	sb.WriteString(fmt.Sprintf("Close: %s\n", FormatFloat(p.Close)))
 	sb.WriteString(fmt.Sprintf("Open: %s\n", FormatFloat(p.Open)))
 	sb.WriteString(fmt.Sprintf("Trade Price: %s\n", FormatFloat(p.TradePrice)))
-	sb.WriteString(fmt.Sprintf("Stop Limit: %s\n", FormatFloat(p.StopLimit)))
-	sb.WriteString(fmt.Sprintf("TP: %s\n", FormatFloat(p.Tp)))
+	sb.WriteString(fmt.Sprintf("Stop Limit: %s\n", FormatFloat(FormatFloatPrecisionFloat(p.StopLimit))))
+	sb.WriteString(fmt.Sprintf("TP: %s\n", FormatFloat(FormatFloatPrecisionFloat(p.Tp))))
 	sb.WriteString(fmt.Sprintf("Magic Number: %s\n", FormatFloat(p.MagicNumber)))
 	sb.WriteString(fmt.Sprintf("Next Trade Price: %s\n", FormatFloat(p.NextTradePrice)))
 	sb.WriteString(fmt.Sprintf("Next Trade Type: %s\n", p.NextTradeType))
@@ -379,7 +391,7 @@ func ComputeTradeData(c *gin.Context,
 	open, _ := strconv.ParseFloat(data.Open, 64)
 
 	diffPip, _ := strconv.ParseFloat(generalData.DiffPip, 64)
-	if CalculateDiff(close, open, high, close, low, diffPip) {
+	if !CalculateDiff(close, open, high, close, low, diffPip) {
 		return false, nil
 	}
 
