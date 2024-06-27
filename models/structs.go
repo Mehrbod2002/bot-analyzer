@@ -23,22 +23,23 @@ type ProvidedData struct {
 }
 
 type Trade struct {
-	ClosePrev string `json:"close_1"`
-	Index     string `json:"index"`
-	Flag      string `json:"flag"`
-	Signaler  string `json:"signaler"`
-	Volume    string `json:"volume"`
-	Condition string `json:"condition"`
-	Symbol    string `json:"symbol"`
-	Time      string `json:"time"`
-	Open      string `json:"open"`
-	High      string `json:"high"`
-	Low       string `json:"low"`
-	Close     string `json:"close"`
-	RSI       string `json:"rsi"`
-	MACD      string `json:"macd"`
-	Signal    string `json:"signal"`
-	Histogram string `json:"histogram"`
+	IsValuesCandels string `json:"is_values_condition"`
+	ClosePrev       string `json:"close_1"`
+	Index           string `json:"index"`
+	Flag            string `json:"flag"`
+	Signaler        string `json:"signaler"`
+	Volume          string `json:"volume"`
+	Condition       string `json:"condition"`
+	Symbol          string `json:"symbol"`
+	Time            string `json:"time"`
+	Open            string `json:"open"`
+	High            string `json:"high"`
+	Low             string `json:"low"`
+	Close           string `json:"close"`
+	RSI             string `json:"rsi"`
+	MACD            string `json:"macd"`
+	Signal          string `json:"signal"`
+	Histogram       string `json:"histogram"`
 }
 
 type User struct {

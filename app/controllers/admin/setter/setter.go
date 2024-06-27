@@ -143,21 +143,16 @@ func TradeData(c *gin.Context) {
 	volume, err := strconv.ParseFloat(data.Volume, 64)
 	hasFlag, _ := utils.StringToBool(data.Flag)
 
-	candelValues, _ := strconv.ParseFloat(generalData.ValuesCandels, 64)
+	isValues, err := utils.StringToBool(data.IsValuesCandels)
+	if err != nil {
+		return
+	}
 
-	if candelValues != 0 {
-		closePrev, _ := strconv.ParseFloat(data.ClosePrev, 64)
-		close, _ := strconv.ParseFloat(data.Close, 64)
-		values := (close - closePrev) / closePrev * 100
-
-		if values < (candelValues*-1) && candelValues < values {
-			valid, computedData := models.ComputeTradeData(c, generalData, data, true)
-			if valid {
-				msg := computedData.String()
-				logger.SendMessage(msg)
-			}
-		} else {
-			return
+	if isValues {
+		valid, computedData := models.ComputeTradeData(c, generalData, data, false)
+		if valid {
+			msg := computedData.String()
+			logger.SendMessage(msg)
 		}
 	}
 

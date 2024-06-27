@@ -20,30 +20,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func CalculateDiff(value, open, high, close, low, diff float64) bool {
-	precision := GetPrecision(value)
-	pip := (math.Pow10(-precision) * diff) * -1
-	matched := false
-
-	if (high-open)*-1 >= pip {
-		matched = true
-	}
-
-	if -1*(open-low) >= pip {
-		matched = true
-	}
-
-	if -1*(high-close) >= pip {
-		matched = true
-	}
-
-	if -1*(close*low) >= pip {
-		matched = true
-	}
-
-	return matched
-}
-
 func CalculateIncrement(value float64) float64 {
 	precision := GetPrecision(value)
 	return math.Pow10(-precision)
@@ -337,8 +313,8 @@ func (p ProvidedData) String() string {
 	sb.WriteString(fmt.Sprintf("Close: %s\n", FormatFloat(p.Close)))
 	sb.WriteString(fmt.Sprintf("Open: %s\n", FormatFloat(p.Open)))
 	sb.WriteString(fmt.Sprintf("Trade Price: %s\n", FormatFloat(p.TradePrice)))
-	sb.WriteString(fmt.Sprintf("Stop Limit: %s\n", FormatFloat(FormatFloatPrecisionFloat(p.StopLimit))))
-	sb.WriteString(fmt.Sprintf("TP: %s\n", FormatFloat(FormatFloatPrecisionFloat(p.Tp))))
+	sb.WriteString(fmt.Sprintf("Stop Limit: %s\n", FormatFloat(p.StopLimit)))
+	sb.WriteString(fmt.Sprintf("TP: %s\n", FormatFloat(p.Tp)))
 	sb.WriteString(fmt.Sprintf("Magic Number: %s\n", FormatFloat(p.MagicNumber)))
 	sb.WriteString(fmt.Sprintf("Next Trade Price: %s\n", FormatFloat(p.NextTradePrice)))
 	sb.WriteString(fmt.Sprintf("Next Trade Type: %s\n", p.NextTradeType))
@@ -389,11 +365,6 @@ func ComputeTradeData(c *gin.Context,
 	low, _ := strconv.ParseFloat(data.Low, 64)
 	close, _ := strconv.ParseFloat(data.Close, 64)
 	open, _ := strconv.ParseFloat(data.Open, 64)
-
-	diffPip, _ := strconv.ParseFloat(generalData.DiffPip, 64)
-	if !CalculateDiff(close, open, high, close, low, diffPip) {
-		return false, nil
-	}
 
 	TradePrice := 0.0
 	StopLimit := 0.0
