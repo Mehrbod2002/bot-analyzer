@@ -9,8 +9,7 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"strconv"
-	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -139,16 +138,18 @@ func TradeData(c *gin.Context) {
 		return
 	}
 
-	var matchedCondition = false
-	volume, err := strconv.ParseFloat(data.Volume, 64)
-	hasFlag, _ := utils.StringToBool(data.Flag)
+	// var matchedCondition = false
+	// volume, err := strconv.ParseFloat(data.Volume, 64)
+	// hasFlag, _ := utils.StringToBool(data.Flag)
 
 	isValues, err := utils.StringToBool(data.IsValuesCandels)
 	if err != nil {
 		return
 	}
 
-	if isValues {
+	now := time.Now().UTC()
+	seconds := now.Second()
+	if isValues && seconds >= 59 || seconds <= 1 {
 		valid, computedData := models.ComputeTradeData(c, generalData, data, false)
 		if valid {
 			msg := computedData.String()
@@ -156,37 +157,37 @@ func TradeData(c *gin.Context) {
 		}
 	}
 
-	if generalData.FirstType.NumberCount >= 0 {
-		countFlags := len(strings.Split(data.Signaler, "|")) - 2
-		if !matchedCondition &&
-			(generalData.FirstType.HasFlag == hasFlag || generalData.JustSendSignal) &&
-			(generalData.FirstType.NumberCount == 0 || countFlags == generalData.FirstType.NumberCount) &&
-			(generalData.FirstType.MinVolumn <= volume || generalData.JustSendSignal) {
+	// if generalData.FirstType.NumberCount >= 0 {
+	// 	countFlags := len(strings.Split(data.Signaler, "|")) - 2
+	// 	if !matchedCondition &&
+	// 		(generalData.FirstType.HasFlag == hasFlag || generalData.JustSendSignal) &&
+	// 		(generalData.FirstType.NumberCount == 0 || countFlags == generalData.FirstType.NumberCount) &&
+	// 		(generalData.FirstType.MinVolumn <= volume || generalData.JustSendSignal) {
 
-			matchedCondition = true
-			valid, computedData := models.ComputeTradeData(c, generalData, data, true)
-			if valid {
-				msg := computedData.String()
-				logger.SendMessage(msg)
-			}
-		}
-	}
+	// 		matchedCondition = true
+	// 		valid, computedData := models.ComputeTradeData(c, generalData, data, true)
+	// 		if valid {
+	// 			msg := computedData.String()
+	// 			logger.SendMessage(msg)
+	// 		}
+	// 	}
+	// }
 
-	if generalData.SecondType.NumberCount >= 0 {
-		countFlags := len(strings.Split(data.Signaler, "|")) - 2
-		if !matchedCondition &&
-			(generalData.SecondType.HasFlag == hasFlag || generalData.JustSendSignal) &&
-			(generalData.SecondType.NumberCount == 0 || countFlags == generalData.SecondType.NumberCount) &&
-			(generalData.SecondType.MinVolumn <= volume || generalData.JustSendSignal) {
+	// if generalData.SecondType.NumberCount >= 0 {
+	// 	countFlags := len(strings.Split(data.Signaler, "|")) - 2
+	// 	if !matchedCondition &&
+	// 		(generalData.SecondType.HasFlag == hasFlag || generalData.JustSendSignal) &&
+	// 		(generalData.SecondType.NumberCount == 0 || countFlags == generalData.SecondType.NumberCount) &&
+	// 		(generalData.SecondType.MinVolumn <= volume || generalData.JustSendSignal) {
 
-			matchedCondition = true
-			valid, computedData := models.ComputeTradeData(c, generalData, data, false)
-			if valid {
-				msg := computedData.String()
-				logger.SendMessage(msg)
-			}
-		}
-	}
+	// 		matchedCondition = true
+	// 		valid, computedData := models.ComputeTradeData(c, generalData, data, false)
+	// 		if valid {
+	// 			msg := computedData.String()
+	// 			logger.SendMessage(msg)
+	// 		}
+	// 	}
+	// }
 
 	c.JSON(http.StatusOK, gin.H{"message": "Successfully received data"})
 }
