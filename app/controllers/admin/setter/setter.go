@@ -9,7 +9,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -147,9 +146,7 @@ func TradeData(c *gin.Context) {
 		return
 	}
 
-	now := time.Now().UTC()
-	seconds := now.Second()
-	if isValues && seconds >= 59 || seconds <= 1 {
+	if isValues {
 		valid, computedData := models.ComputeTradeData(c, generalData, data, false)
 		if valid {
 			msg := computedData.String()
